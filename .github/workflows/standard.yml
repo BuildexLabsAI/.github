@@ -1,0 +1,28 @@
+# This repository checks itself with its own, possibly changed, copy of the shared workflow, and
+# tests the check script.
+name: standard
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  standard:
+    uses: ./.github/workflows/standard-check.yml
+
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Lint the check script
+        run: shellcheck src/check-standard.sh tests/check-standard.test.sh .github/hooks/pre-commit
+      - name: Test the check script
+        run: bash tests/check-standard.test.sh

@@ -1,0 +1,14 @@
+# Secrets: commit .env.example with placeholder values instead
+.env
+.env.*
+!.env.example
+
+# Personal Claude Code files
+CLAUDE.local.md
+handoff.md
+.claude/settings.local.json
+.claude/worktrees/
+
+# Operating system junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,55 @@
+# The BuildexLabsAI repository standard check, shared by every repository in the organization.
+# Each repository calls it from .github/workflows/standard.yml. The rules live in
+# src/check-standard.sh; this workflow only runs them, plus a secret scan.
+name: standard-check
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: repo
+          fetch-depth: 0 # the secret scan reads the whole history
+          persist-credentials: false
+
+      - name: Check out the standard
+        if: github.repository != 'BuildexLabsAI/.github'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: BuildexLabsAI/.github
+          path: org-standard
+          persist-credentials: false
+
+      - name: Structure and naming
+        working-directory: repo
+        env:
+          # Passed through the environment, never pasted into the script, so a pull request
+          # title cannot inject shell commands.
+          STANDARD_PR_TITLE: ${{ github.event.pull_request.title }}
+          STANDARD_BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ "$GITHUB_REPOSITORY" = "BuildexLabsAI/.github" ]; then std=src; else std=../org-standard/src; fi
+          bash "$std/check-standard.sh" --canonical "$std"
+
+      - name: Secrets (gitleaks)
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git --no-banner --redact --verbose .
