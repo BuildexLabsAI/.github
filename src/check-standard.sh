@@ -18,6 +18,7 @@ export LC_ALL=C
 MAX_BYTES=$((5 * 1024 * 1024))
 # Besides letters, digits and . _ - this allows the route symbols frameworks put in file names:
 # [slug] (group) @slot +page $param {-$optional}.
+# shellcheck disable=SC2016  # the $ is a literal character here, not an expansion
 NAME_RE='^[][A-Za-z0-9._@+()${}-]+$'
 KEBAB_RE='^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+)*$'
 TITLE_RE='^(feat|fix|docs|chore|refactor|test|perf|ci|build|style|revert)(\([a-z0-9._/-]+\))?!?: [^ ]'
@@ -74,6 +75,7 @@ kebab_of() { # suggested kebab-case spelling of a name
 
 # --- exceptions ---------------------------------------------------------------------------
 
+# shellcheck disable=SC2094  # report only names the file in a message; it never writes to it
 load_exceptions() {
   [ -f "$EXCEPTIONS_FILE" ] || return 0
   local line pattern reason n=0
@@ -141,7 +143,7 @@ set_kind() { # NAME — sets $kind for file types with their own rule, or emptie
 }
 
 check_path() { # PATH — name and file-type rules for one repository-relative path
-  local path=$1 rest=$1 comp first= depth=0
+  local path=$1 rest=$1 comp first='' depth=0
   is_excepted "$path" && return 0
   while :; do
     comp=${rest%%/*}
@@ -304,7 +306,7 @@ run_staged() {
 }
 
 run_hook() { # blocks Claude Code from creating a file whose name breaks the standard
-  local input file_path script_dir root_l root_p rel cur rest comp match
+  local input file_path script_dir root_l root_p rel cur rest comp match entry
   input=$(cat)
   if ! command -v jq >/dev/null 2>&1; then
     echo "check-standard: jq is not installed, so the file-name check was skipped." >&2
@@ -332,7 +334,14 @@ run_hook() { # blocks Claude Code from creating a file whose name breaks the sta
   rest=$rel
   while [ "$errors" -eq 0 ]; do   # a new name must not clash by letter case with an existing one
     comp=${rest%%/*}
-    match=$(ls -A "$cur" 2>/dev/null | grep -ixF -- "$comp" | grep -vxF -- "$comp" | head -n 1)
+    match=
+    shopt -s nocasematch
+    for entry in "$cur"/* "$cur"/.[!.]* "$cur"/..?*; do
+      [ -e "$entry" ] || continue
+      entry=${entry##*/}
+      if [ "$entry" != "$comp" ] && [[ $entry == "$comp" ]]; then match=$entry; break; fi
+    done
+    shopt -u nocasematch
     if [ -n "$match" ]; then
       report error "$rel" "\"$comp\" differs only by letter case from the existing \"$match\". Use \"$match\"."
       break

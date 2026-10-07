@@ -75,7 +75,7 @@ expect_clean() {
 
 echo "== whole repository =="
 new_repo; run; expect_clean "clean repository passes"
-cd "$TMP"; run; expect "outside a git repository fails" 1 "git repository"
+cd "$TMP" || exit 1; run; expect "outside a git repository fails" 1 "git repository"
 
 new_repo; rm README.md; run; expect "missing README.md fails" 1 "README.md"
 new_repo; printf '# no import\n' > CLAUDE.md; run; expect "CLAUDE.md without @AGENTS.md fails" 1 "@AGENTS.md"
@@ -98,6 +98,7 @@ touch "src/app/[slug]/page.tsx" "src/app/(marketing)/page.tsx" "src/app/@modal/d
   src/adlete3d/body/__init__.py src/components/Button.tsx
 run; expect_clean "framework names inside src pass"
 new_repo; mkdir -p "src/routes/{-\$locale}"
+# shellcheck disable=SC2016  # literal $ in TanStack Router file names
 touch 'src/routes/$username.tsx' 'src/routes/{-$locale}/index.tsx' src/routes/__root.tsx
 run; expect_clean "TanStack Router names inside src pass"
 new_repo; blob=$(git hash-object -w /dev/null)
@@ -160,7 +161,7 @@ new_repo; touch "docs/old notes.md"; git add -A; git_q commit -qm legacy
 echo change >> "docs/old notes.md"; git add -A; run --staged; expect_clean "editing a legacy file does not block the commit"
 new_repo; head -c 6000000 /dev/zero > src/model.bin; git add -A; run --staged; expect "file over 5 MB blocks the commit" 1 "src/model.bin"
 new_repo; mkdir tasks; touch tasks/todo.md; git add -A; run --staged; expect "new unknown top-level folder warns but passes" 0 "tasks/"
-dir=$(mktemp -d "$TMP/empty.XXXXXX"); cd "$dir"; git init -q -b main; touch "Bad Name.md"; git add -A
+dir=$(mktemp -d "$TMP/empty.XXXXXX"); cd "$dir" || exit 1; git init -q -b main; touch "Bad Name.md"; git add -A
 run --staged; expect "first commit of an empty repository is checked" 1 "Bad Name.md"
 
 echo "== Claude Code hook =="
