@@ -16,7 +16,7 @@ check that enforces the standard in every repository.
   `.github/scripts/check-standard.sh`. CI runs the current check from this repository's main:
 
 ```mermaid
-flowchart LR
+flowchart TD
     S[src/check-standard.sh on main] -- copy --> R[Each repository]
     R -- Claude Code creates a file --> H[Claude Code hook: blocks a name that breaks the rules]
     R -- git commit --> P[pre-commit hook: blocks bad new names, media, files over 5 MB]
