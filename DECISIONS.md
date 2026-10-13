@@ -2,6 +2,7 @@
 
 Choices that neither the code nor the git log shows, newest first. One line each.
 
+- 2026-10-13: README.md is written with the readme-generator skill, in its sections for the project type plus the template's five, with every command run first and a Codex review before main. The skill gives every repository the same shape; running the commands and an independent review catch the false claims a confident author misses.
 - 2026-10-07: This repository is public, because GitHub only reads organization-wide default files from a public `.github` repository.
 - 2026-10-07: Hard enforcement waits for GitHub Team. GitHub Free has no rulesets or branch protection for private repositories, so the standard relies on agent instructions, local hooks and a CI check that warns; docs/enforcement.md holds the ruleset ready to switch on.
 - 2026-10-07: All code lives in src/ whatever the framework (Next.js src/app/, Vite src/, Python src/<package>/), so the top level is identical in every repository.
