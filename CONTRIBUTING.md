@@ -83,6 +83,27 @@ prisma  # Prisma reads its schema from a folder at the root
 A choice that the code and the git log cannot show, such as why this library and not that
 one, goes into DECISIONS.md the day it is made, as one dated line.
 
+## README
+
+Every README.md is written with the
+[readme-generator](https://github.com/b1rdmania/readme-generator) skill for Claude Code:
+
+```bash
+git clone https://github.com/b1rdmania/readme-generator ~/.claude/skills/readme-generator
+```
+
+1. **Sections.** The skill picks the sections for the project type: a Claude Code skill, a CLI
+   tool, a package, a script collection or another kind of repository. Every README also keeps
+   the five sections of the repo-template README: Run it locally, Deploy, Media and large files,
+   First-time setup and Owner. The last four close the README in that order. Write "Not
+   deployed." or "None." rather than drop one. A section the project needs beyond these, such as
+   how to test or release it, stays.
+2. **Every command runs first.** The skill does not run the README's commands. Run each command
+   before it goes into the README and keep only the ones that work.
+3. **Independent review.** Before the README reaches main, Codex reviews it at high reasoning
+   effort against the code: every command, path, number and claim. Fix what blocks and review
+   again until nothing blocking is left.
+
 ## New repositories
 
 1. Create the repository from
@@ -92,7 +113,8 @@ one, goes into DECISIONS.md the day it is made, as one dated line.
    ```bash
    gh api -X PATCH repos/BuildexLabsAI/<name> -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false -F delete_branch_on_merge=true -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY
    ```
-3. Fill in README.md and AGENTS.md: what it is, the commands, the sanity check.
+3. Write README.md as [README](#readme) says, and fill in AGENTS.md: the commands and the
+   sanity check.
 4. In every clone, once: `git config core.hooksPath .github/hooks`
 
 ## The check
