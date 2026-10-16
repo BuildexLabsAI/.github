@@ -107,13 +107,12 @@ git update-index --add --cacheinfo "100644,$blob,src/assets/b.png"
 run; expect "names differing only by letter case fail" 1 "src/Assets"
 
 echo "== media, size, secrets =="
-new_repo; touch docs/demo.mp4; run; expect "video fails" 1 "docs/demo.mp4"
-new_repo; touch docs/deck.pdf; run; expect "PDF fails" 1 "docs/deck.pdf"
-new_repo; touch scripts/backup.zip; run; expect "archive fails" 1 "scripts/backup.zip"
+new_repo; touch docs/demo.mp4 docs/voice.mp3 docs/deck.pdf docs/brief.docx docs/scene.blend scripts/backup.zip
+run; expect_clean "video, audio, PDF, Office files, design sources and archives pass"
 new_repo; touch logo.png; run; expect "image at the top level fails" 1 "logo.png"
 new_repo; mkdir -p public; touch public/icon-192.png docs/architecture.png; run; expect_clean "images in public and docs pass"
-new_repo; head -c 6000000 /dev/zero > src/model.bin; run; expect "file over 5 MB fails" 1 "src/model.bin"
-new_repo; head -c 5000000 /dev/zero > src/small.wasm; run; expect_clean "file under 5 MB passes"
+new_repo; head -c 10000000 /dev/zero > docs/deck.pdf; run; expect_clean "a 10 MB file passes"
+new_repo; head -c 10000000 /dev/zero > docs/deck.pdf; git add -A; run; expect_clean "a 10 MB file in the index passes"
 new_repo; echo 'KEY=1' > .env; git add -f .env; run; expect "committed .env fails" 1 ".env"
 new_repo; echo 'KEY=' > .env.example; run; expect_clean ".env.example passes"
 new_repo; touch src/server.pem; run; expect "key file fails" 1 "src/server.pem"
@@ -124,10 +123,10 @@ new_repo; mkdir tasks; touch tasks/todo.md; run; expect "unknown top-level folde
 new_repo; touch notes.md; run; expect "loose top-level document warns but passes" 0 "notes.md"
 
 echo "== exceptions =="
-new_repo; touch docs/contract.pdf
-printf 'docs/contract.pdf  # signed contract, required for the audit\n' > .github/standard-exceptions
+new_repo; touch logo.png
+printf 'logo.png  # the hosting service reads it from the root\n' > .github/standard-exceptions
 run; expect_clean "listed exception passes"
-new_repo; touch docs/contract.pdf; printf 'docs/contract.pdf\n' > .github/standard-exceptions
+new_repo; touch logo.png; printf 'logo.png\n' > .github/standard-exceptions
 run; expect "exception without a reason fails" 1 "reason"
 new_repo; mkdir tasks; touch tasks/todo.md
 printf '# Folders a tool needs at the root\ntasks  # the task runner reads it from the root\n' > .github/standard-exceptions
@@ -159,7 +158,9 @@ new_repo; touch "docs/my notes.md"; git add -A; run --staged; expect "new bad na
 new_repo; touch docs/plan.md; git add -A; run --staged; expect_clean "new good name passes"
 new_repo; touch "docs/old notes.md"; git add -A; git_q commit -qm legacy
 echo change >> "docs/old notes.md"; git add -A; run --staged; expect_clean "editing a legacy file does not block the commit"
-new_repo; head -c 6000000 /dev/zero > src/model.bin; git add -A; run --staged; expect "file over 5 MB blocks the commit" 1 "src/model.bin"
+new_repo; head -c 10000000 /dev/zero > docs/deck.pdf; git add -A; run --staged; expect_clean "a 10 MB PDF commits"
+new_repo; echo draft > docs/deck.pdf; git add -A; git_q commit -qm draft
+head -c 10000000 /dev/zero > docs/deck.pdf; git add -A; run --staged; expect_clean "a committed file grown to 10 MB commits"
 new_repo; mkdir tasks; touch tasks/todo.md; git add -A; run --staged; expect "new unknown top-level folder warns but passes" 0 "tasks/"
 dir=$(mktemp -d "$TMP/empty.XXXXXX"); cd "$dir" || exit 1; git init -q -b main; touch "Bad Name.md"; git add -A
 run --staged; expect "first commit of an empty repository is checked" 1 "Bad Name.md"
@@ -169,7 +170,8 @@ new_repo; run_hook "$PWD/My File.md"; expect "blocks a new file with a space" 2 
 new_repo; run_hook "$PWD/docs/athlete-model.md"; expect_clean "allows a good new file"
 new_repo; run_hook "$PWD/docs/new folder/plan.md"; expect "blocks a new folder with a space" 2 "new folder"
 new_repo; run_hook "$PWD/docs/tähti.md"; expect "blocks a non-ASCII name" 2 "docs/t"
-new_repo; run_hook "$PWD/docs/demo.mp4"; expect "blocks a video" 2 "docs/demo.mp4"
+new_repo; run_hook "$PWD/src/server.pem"; expect "blocks a key file" 2 "src/server.pem"
+new_repo; run_hook "$PWD/docs/deck.pdf"; expect_clean "allows a PDF"
 new_repo; mkdir -p src/assets; touch src/assets/a.png; git add -A; git_q commit -qm assets
 run_hook "$PWD/src/Assets/b.png"; expect "blocks a name that clashes by letter case" 2 "assets"
 new_repo; touch "docs/old notes.md"; run_hook "$PWD/docs/old notes.md"; expect_clean "allows editing an existing file"

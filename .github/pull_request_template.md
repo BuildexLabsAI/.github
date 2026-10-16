@@ -9,6 +9,6 @@
 ## Checklist
 
 - [ ] The title follows Conventional Commits, e.g. `feat(api): add athlete height endpoint`
-- [ ] No secrets, media or files over 5 MB
+- [ ] No secrets
 - [ ] README.md and AGENTS.md still match how to install, run and test
 - [ ] DECISIONS.md has a line for any decision made here

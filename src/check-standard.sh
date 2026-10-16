@@ -15,7 +15,6 @@
 
 export LC_ALL=C
 
-MAX_BYTES=$((5 * 1024 * 1024))
 # Besides letters, digits and . _ - this allows the route symbols frameworks put in file names:
 # [slug] (group) @slot +page $param {-$optional}.
 # shellcheck disable=SC2016  # the $ is a literal character here, not an expansion
@@ -130,12 +129,6 @@ set_kind() { # NAME — sets $kind for file types with their own rule, or emptie
   if [ -z "$kind" ]; then
     case "$ext" in
       pem|key|p12|pfx|jks|keystore) kind=secret ;;
-      mp4|mov|avi|mkv|webm|m4v|wmv|flv|mpg|mpeg) kind=Video ;;
-      mp3|wav|aac|flac|ogg|m4a|aif|aiff|wma) kind=Audio ;;
-      pdf) kind=PDF ;;
-      doc|docx|ppt|pptx|xls|xlsx|pages|numbers|odt|ods|odp|rtf) kind=Office ;;
-      psd|ai|fig|sketch|xd|indd|blend|afdesign|afphoto|aep|prproj) kind='Design source' ;;
-      zip|rar|7z|tar|gz|tgz|bz2|xz|dmg|iso) kind=Archive ;;
       png|jpg|jpeg|gif|webp|avif|svg|ico|bmp|tif|tiff|heic) kind=image ;;
     esac
   fi
@@ -172,8 +165,7 @@ check_path() { # PATH — name and file-type rules for one repository-relative p
     '') ;;
     secret) report error "$path" "Secrets never go into git (.env files, keys, certificates). Commit .env.example with placeholders instead, and rotate anything already pushed." ;;
     junk) report error "$path" "Operating system junk file. Delete it and add it to .gitignore." ;;
-    image) [ "$depth" -eq 1 ] && report error "$path" "Images do not belong at the top level. App assets go in src/ or public/; other media stays outside git." ;;
-    *) report error "$path" "$kind files do not belong in git. Keep media outside the repository and link it from README.md, or list the file in $EXCEPTIONS_FILE with the reason." ;;
+    image) [ "$depth" -eq 1 ] && report error "$path" "Images do not belong at the top level. App assets go in src/ or public/, other images in docs/." ;;
   esac
   if [ "$depth" -eq 1 ] && [ -z "$kind" ]; then
     case "$comp" in
@@ -191,11 +183,6 @@ note_top_dir() { # PATH — warns once about each unexpected top-level folder
   case "$KNOWN_DIRS" in *" $dir "*) return ;; esac
   if is_excepted "$dir" || is_excepted "$dir/" || is_excepted "$dir/-"; then return; fi
   report warning "$dir/" "Unexpected top-level folder. Code goes in src/ and documents in docs/. If a tool needs this folder at the root, list it in $EXCEPTIONS_FILE with the reason."
-}
-
-size_error() { # PATH BYTES
-  is_excepted "$1" && return
-  report error "$1" "File is $(awk -v b="$2" 'BEGIN { printf "%.1f", b / 1048576 }') MB; the limit is 5 MB. Large files live outside git (link them from README.md), or list the file in $EXCEPTIONS_FILE with the reason."
 }
 
 # --- whole-repository rules ---------------------------------------------------------------
@@ -227,22 +214,6 @@ check_collisions() { # names in $paths that differ only by letter case, at any f
     awk '{ l = tolower($0); if (l in seen) { if (seen[l] != $0) print seen[l] "\t" $0 } else seen[l] = $0 }')
 }
 
-check_index_sizes() { # every file in the git index
-  local rec meta sha size i=0
-  local shas=() names=()
-  while IFS= read -r -d '' rec; do
-    meta=${rec%%$'\t'*}
-    sha=${meta#* }; sha=${sha%% *}
-    shas+=("$sha"); names+=("${rec#*$'\t'}")
-  done < <(git ls-files -s -z)
-  [ "${#shas[@]}" -eq 0 ] && return
-  while read -r size; do
-    i=$((i + 1))
-    case "$size" in ''|*[!0-9]*) continue ;; esac   # e.g. a submodule commit
-    [ "$size" -gt "$MAX_BYTES" ] && size_error "${names[$((i - 1))]}" "$size"
-  done < <(printf '%s\n' "${shas[@]}" | git cat-file --batch-check='%(objectsize)')
-}
-
 check_drift() { # DIR — compare this repo's copies with the canonical ones in DIR
   local dir=$1 copy=.github/scripts/check-standard.sh
   if [ -f AGENTS.md ] && grep -q 'buildexlabs-standard:start' AGENTS.md &&
@@ -269,7 +240,7 @@ check_pull_request() {
 # --- modes --------------------------------------------------------------------------------
 
 run_full() {
-  local p size
+  local p
   while IFS= read -r -d '' p; do paths+=("$p"); done < <(git ls-files -z --cached --others --exclude-standard)
   check_required
   for p in ${paths[@]+"${paths[@]}"}; do
@@ -277,19 +248,12 @@ run_full() {
     note_top_dir "$p"
   done
   check_collisions
-  check_index_sizes
-  while IFS= read -r -d '' p; do   # new files are not in the index yet
-    [ -f "$p" ] || continue
-    size=$(wc -c < "$p")
-    size=${size//[!0-9]/}   # macOS wc pads the number with spaces
-    [ "$size" -gt "$MAX_BYTES" ] && size_error "$p" "$size"
-  done < <(git ls-files -z --others --exclude-standard)
   [ -n "$canonical" ] && check_drift "$canonical"
   check_pull_request
 }
 
 run_staged() {
-  local base p size
+  local base p
   if git rev-parse -q --verify HEAD >/dev/null 2>&1; then base=HEAD
   else base=$(git hash-object -t tree /dev/null); fi   # first commit: compare with nothing
   # Only new names are checked, so a commit that edits an old, non-standard file still goes in.
@@ -297,10 +261,6 @@ run_staged() {
     check_path "$p"
     note_top_dir "$p"
   done < <(git diff --cached --name-only -z --diff-filter=ACR "$base")
-  while IFS= read -r -d '' p; do
-    size=$(git cat-file -s ":$p" 2>/dev/null) || continue
-    [ "$size" -gt "$MAX_BYTES" ] && size_error "$p" "$size"
-  done < <(git diff --cached --name-only -z --diff-filter=ACMR "$base")
   while IFS= read -r -d '' p; do paths+=("$p"); done < <(git ls-files -z)
   check_collisions
 }

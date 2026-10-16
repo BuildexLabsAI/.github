@@ -7,7 +7,7 @@ on GitHub Team.
 |---|---|---|---|
 | AGENTS.md and CLAUDE.md | Tell every AI agent the rules | Instruction only | Instruction only |
 | Claude Code hook | Stops Claude from creating a badly named file | Blocks (Claude Code only) | Same |
-| git pre-commit hook | Stops a commit with a bad new name, media or a file over 5 MB | Blocks, once switched on in the clone | Same |
+| git pre-commit hook | Stops a commit with a bad new name | Blocks, once switched on in the clone | Same |
 | CI check `standard / check` | Checks the whole repository, the pull request title and secrets | Red X; merging still works | Blocks the merge |
 | Merge settings | Squash merge only; branches deleted after merge | Works | Works |
 | Repository creation | Only owners create repositories, so each one starts from the template | Works | Works |
