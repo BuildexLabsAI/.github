@@ -19,7 +19,7 @@ check that enforces the standard in every repository.
 flowchart TD
     S[src/check-standard.sh on main] -- copy --> R[Each repository]
     R -- Claude Code creates a file --> H[Claude Code hook: blocks a name that breaks the rules]
-    R -- git commit --> P[pre-commit hook: blocks bad new names, media, files over 5 MB]
+    R -- git commit --> P[pre-commit hook: blocks bad new names]
     R -- pull request or push to main --> C[standard-check.yml: whole repository, pull request title, secret scan]
     S -- current check --> C
     C -- compares the repository's copies with src/ --> W[Warning when a copy is out of date]

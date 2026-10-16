@@ -32,11 +32,11 @@ the reasons, is CONTRIBUTING.md in the BuildexLabsAI/.github repository.
   everything in docs/. Everywhere: no spaces, no non-ASCII characters, and no two names that
   differ only by letter case. Inside src/, tests/ and scripts/, follow the language's own
   convention (`snake_case.py`, `Button.tsx`).
-- **Never commit** secrets (.env files, keys, tokens), video, audio, PDF, Office documents,
-  design source files, archives, or any file over 5 MB. Media lives outside git; link to it
-  from README.md. Small assets the app ships (icons, fonts, wasm) belong in src/ or public/.
+- **Never commit** secrets (.env files, keys, tokens). Media, documents and large files may go
+  into git; GitHub itself refuses any file over 100 MiB. Small assets the app ships (icons,
+  fonts, wasm) belong in src/ or public/.
 - **Exceptions** go in `.github/standard-exceptions`, one path per line with its reason:
-  `docs/contract.pdf  # signed contract, required for the audit`.
+  `prisma  # Prisma reads its schema from a folder at the root`.
 - **Branches.** Never commit to main directly. Name branches `feat/…`, `fix/…`, `docs/…`,
   `chore/…`, `refactor/…` or `test/…`. Agent tools' own prefixes (`claude/…`, `codex/…`) are
   accepted.

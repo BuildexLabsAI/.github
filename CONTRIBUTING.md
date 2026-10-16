@@ -47,12 +47,15 @@ BuildexLabsAI block in each repository's AGENTS.md.
 - **Secrets:** `.env` files, keys, certificates, tokens. Commit `.env.example` with placeholder
   values instead. If a secret is pushed, rotate it first: deleting the file does not remove it
   from git history.
-- **Media and documents:** video, audio, PDF, Office files, design source files (Photoshop,
-  Figma, Blender) and archives.
-- **Any file over 5 MB.**
 
-Media lives outside git, and README.md links to where it is. Small files the app ships
-(icons, fonts, wasm) belong in `src/` or `public/`.
+**Allowed:** video, audio, PDF, Office files, design source files (Photoshop, Figma, Blender)
+and archives, up to GitHub's limit. The check allows these file types and has no size limit.
+Top-level images are rejected: app images go in `src/` or `public/`, other images in `docs/`.
+
+**GitHub's limit:** GitHub blocks files larger than 100 MiB. Git warns above 50 MiB.
+
+Small files the app ships (icons, fonts, wasm) belong in `src/` or `public/`. Each repository's
+README.md has a "Media and large files" section saying where its media lives.
 
 ## Exceptions
 
@@ -60,7 +63,6 @@ When a file really has to break a rule, list it in `.github/standard-exceptions`
 reason. The reason is required, and the pull request shows it to the reviewer.
 
 ```
-docs/contract.pdf  # signed contract, required for the audit
 prisma  # Prisma reads its schema from a folder at the root
 ```
 
@@ -122,7 +124,7 @@ git clone https://github.com/b1rdmania/readme-generator ~/.claude/skills/readme-
 | Where | When | What happens |
 |---|---|---|
 | Claude Code hook | Claude creates a file | A name that breaks the rules is blocked |
-| git pre-commit hook | `git commit` | A commit with a bad new name, media or a file over 5 MB is blocked |
+| git pre-commit hook | `git commit` | A commit with a bad new name is blocked |
 | CI (`standard`) | Every pull request and push to main | The whole repository, the pull request title and a secret scan; problems show as a red X |
 
 Run it yourself with `bash .github/scripts/check-standard.sh`. What is enforced on the
