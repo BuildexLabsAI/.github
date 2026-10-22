@@ -88,10 +88,12 @@ one, goes into DECISIONS.md the day it is made, as one dated line.
 ## README
 
 Every README.md is written with the
-[readme-generator](https://github.com/b1rdmania/readme-generator) skill for Claude Code:
+[readme-generator](https://github.com/b1rdmania/readme-generator) skill for Claude Code, then
+checked with the [simple-english](https://github.com/AminBlg/SimpleEnglish) skill:
 
 ```bash
 git clone https://github.com/b1rdmania/readme-generator ~/.claude/skills/readme-generator
+npx skills add AminBlg/SimpleEnglish -g -a claude-code -y
 ```
 
 1. **Sections.** The skill picks the sections for the project type: a Claude Code skill, a CLI
@@ -100,9 +102,13 @@ git clone https://github.com/b1rdmania/readme-generator ~/.claude/skills/readme-
    First-time setup and Owner. The last four close the README in that order. Write "Not
    deployed." or "None." rather than drop one. A section the project needs beyond these, such as
    how to test or release it, stays.
-2. **Every command runs first.** The skill does not run the README's commands. Run each command
+2. **STE pass.** Run the simple-english skill once over all prose, in its default mode. It
+   applies the rules of ASD-STE100 Simplified Technical English (STE): short sentences, one
+   instruction per sentence, the condition before the command, active voice and one name for
+   one thing. Code, commands, paths and quoted output stay as they are.
+3. **Every command runs first.** The skill does not run the README's commands. Run each command
    before it goes into the README and keep only the ones that work.
-3. **Independent review.** Before the README reaches main, Codex reviews it at high reasoning
+4. **Independent review.** Before the README reaches main, Codex reviews it at high reasoning
    effort against the code: every command, path, number and claim. Fix what blocks and review
    again until nothing blocking is left.
 

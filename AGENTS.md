@@ -46,8 +46,9 @@ the reasons, is CONTRIBUTING.md in the BuildexLabsAI/.github repository.
 - **Decisions** that the code and git log cannot show go in DECISIONS.md, one dated line each.
 - **README.md** is written with the readme-generator skill: its sections for the project type,
   plus the template's Run it locally, Deploy, Media and large files, First-time setup and Owner.
-  Run every command before it goes in and keep only the ones that work. Codex reviews it at high
-  reasoning effort before it reaches main.
+  Then the simple-english skill makes one Simplified Technical English (STE) pass over all prose,
+  in its default mode. Run every command before it goes in and keep only the ones that work.
+  Codex reviews it at high reasoning effort before it reaches main.
 - **Check before you push:** `bash .github/scripts/check-standard.sh`. CI runs the same check
   on every pull request.
 <!-- buildexlabs-standard:end -->
