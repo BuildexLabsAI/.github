@@ -2,6 +2,7 @@
 
 Choices that neither the code nor the git log shows, newest first. One line each.
 
+- 2026-11-17: Clones keep switching the pre-commit hook on with `git config core.hooksPath .github/hooks`. A security check may warn that a hook in a tracked folder can run outside an agent's sandbox on git push and fetch; then the clone's owner moves the hook into `.git/hooks` with a small forwarding stub. Esko kept the setting because the standard changes only when something actually breaks: every change has to reach the template and every repository's copy, as the media rule did.
 - 2026-10-21: After readme-generator writes a README.md, the simple-english skill makes one Simplified Technical English (STE) pass over its prose, in the skill's default mode. Esko made this an organization rule, so the README reads the same whoever or whatever writes it. The default mode keeps domain words; the strict mode's dictionary rules make a README stiff for no gain.
 - 2026-10-13: README.md is written with the readme-generator skill, in its sections for the project type plus the template's five, with every command run first and a Codex review before main. The skill gives every repository the same shape; running the commands and an independent review catch the false claims a confident author misses.
 - 2026-10-07: This repository is public, because GitHub only reads organization-wide default files from a public `.github` repository.
